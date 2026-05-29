@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import api from '../api/axios'
 
@@ -11,6 +11,25 @@ export function AuthProvider({ children }) {
   })
   const [token, setToken] = useState(() => localStorage.getItem('token') || null)
   const [loading, setLoading] = useState(false)
+  const [borrowLimit, setBorrowLimit] = useState(null)
+
+  const refreshBorrowLimit = useCallback(async () => {
+    if (!localStorage.getItem('token')) {
+      setBorrowLimit(null)
+      return
+    }
+    try {
+      const { data } = await api.get('/borrow/limit')
+      setBorrowLimit(data)
+    } catch (_) {
+      setBorrowLimit(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (token) refreshBorrowLimit()
+    else setBorrowLimit(null)
+  }, [token, refreshBorrowLimit])
 
   useEffect(() => {
     if (token) {
@@ -65,6 +84,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null)
     setToken(null)
+    setBorrowLimit(null)
     toast.info('Çıkış yapıldı')
   }
 
@@ -75,11 +95,13 @@ export function AuthProvider({ children }) {
       loading,
       isAuthenticated: Boolean(token),
       isAdmin: user?.role === 'admin',
+      borrowLimit,
+      refreshBorrowLimit,
       login,
       register,
       logout,
     }),
-    [user, token, loading],
+    [user, token, loading, borrowLimit, refreshBorrowLimit],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

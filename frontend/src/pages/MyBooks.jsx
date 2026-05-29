@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import api from '../api/axios'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { useAuth } from '../context/AuthContext'
 
 const TABS = [
   { id: 'borrowed', label: 'Aktif' },
@@ -19,6 +20,7 @@ const formatDate = (date) => {
 }
 
 export default function MyBooks() {
+  const { refreshBorrowLimit } = useAuth()
   const [borrows, setBorrows] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('borrowed')
@@ -46,6 +48,7 @@ export default function MyBooks() {
       await api.put(`/borrow/return/${borrowId}`)
       toast.success('Kitap iade edildi')
       fetchData()
+      refreshBorrowLimit()
     } catch (err) {
       toast.error(err?.response?.data?.message || 'İade başarısız')
     } finally {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
+import api from '../api/axios'
 
 const CONTACT_INFO = [
   {
@@ -49,10 +50,18 @@ export default function Contact() {
     event.preventDefault()
     if (!validate()) return
     setSending(true)
-    await new Promise((r) => setTimeout(r, 800))
-    toast.success('Mesajın bize ulaştı, en kısa sürede dönüş yapacağız!')
-    setForm({ name: '', email: '', subject: '', message: '' })
-    setSending(false)
+    try {
+      const { data } = await api.post('/messages', form)
+      toast.success(data?.message || 'Mesajın bize ulaştı, en kısa sürede dönüş yapacağız!')
+      setForm({ name: '', email: '', subject: '', message: '' })
+      setErrors({})
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message || 'Mesaj gönderilemedi, lütfen daha sonra tekrar dene'
+      toast.error(msg)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -100,13 +109,20 @@ export default function Contact() {
           <div className="card overflow-hidden p-5 bg-gradient-to-br from-brand-600 to-rose-600 text-white">
             <p className="text-sm font-medium text-rose-100">Bizi Takip Et</p>
             <div className="mt-3 flex gap-2">
-              {['Twitter', 'Instagram', 'GitHub'].map((name) => (
+              {[
+                { name: 'Twitter', href: 'https://www.twitter.com' },
+                { name: 'Instagram', href: 'https://www.instagram.com' },
+                { name: 'TikTok', href: 'https://www.tiktok.com' },
+                { name: 'YouTube', href: 'https://www.youtube.com' },
+              ].map((social) => (
                 <a
-                  key={name}
-                  href="#"
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium ring-1 ring-white/20 backdrop-blur hover:bg-white/25 transition"
                 >
-                  {name}
+                  {social.name}
                 </a>
               ))}
             </div>
