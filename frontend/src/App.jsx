@@ -13,6 +13,9 @@ import Register from './pages/Register'
 import BookDetail from './pages/BookDetail'
 import MyBooks from './pages/MyBooks'
 import AdminDashboard from './pages/AdminDashboard'
+import About from './pages/About'
+import Contact from './pages/Contact'
+import Faq from './pages/Faq'
 
 function NotFound() {
   return (
@@ -29,9 +32,12 @@ export default function App() {
       <AuthProvider>
         <div className="flex min-h-screen flex-col">
           <Navbar />
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+          <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-8">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<Faq />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/books/:id" element={<BookDetail />} />
@@ -60,7 +66,11 @@ export default function App() {
           position="top-right"
           autoClose={3000}
           newestOnTop
-          theme="colored"
+          theme="light"
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+          toastClassName="!rounded-lg !shadow-lg"
         />
       </AuthProvider>
     </BrowserRouter>
