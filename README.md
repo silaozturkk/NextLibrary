@@ -26,25 +26,31 @@ Bu proje, bir kütüphanenin kitap envanteri ile ödünç alma süreçlerini dij
 
 Hero bölümü ve müsait kitapların grid görünümü.
 
-![Anasayfa](docs/screenshots/home.jpg)
+![Anasayfa](docs/screenshots/home.png)
 
 ### Hakkımızda
 
-Misyon, istatistik kartları ve özellik vitrini.
+İstatistik kartları ve özellik vitrini.
 
-![Hakkımızda](docs/screenshots/about.jpg)
+![Hakkımızda](docs/screenshots/about.png)
 
 ### Kitaplarım
 
-Kullanıcının aktif ve geçmiş ödünç kayıtları, sekmeli görünüm.
+Kullanıcının şu an ödünçte olan kitapları.
 
-![Kitaplarım](docs/screenshots/my-books.jpg)
+![Kitaplarım](docs/screenshots/my-books.png)
+
+### Giriş Yap
+
+Sade ve ortalı kart tasarımı.
+
+![Giriş Yap](docs/screenshots/login.png)
 
 ### Kayıt Ol
 
-Sade ve ortalı kart tasarımı, şifre gücü göstergesi.
+Yeni hesap oluşturma formu.
 
-![Kayıt Ol](docs/screenshots/register.jpg)
+![Kayıt Ol](docs/screenshots/register.png)
 
 ---
 
