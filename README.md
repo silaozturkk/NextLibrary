@@ -13,8 +13,8 @@ Bu proje, bir kütüphanenin kitap envanteri ile ödünç alma süreçlerini dij
 
 İki ana kullanıcı rolü vardır:
 
-- **User (Üye)**: Kitapları görüntüler, ödünç alır ve iade eder. Aynı anda en fazla **2 aktif** ödünç hakkı vardır.
-- **Admin**: Tüm kullanıcı yetkilerine sahiptir; ek olarak kitap ekler/günceller/siler ve ödünç kayıtlarının tamamını görür. Admin için ödünç limiti yoktur.
+- **User (Üye)**: Kitapları görüntüler, ödünç alır ve iade eder.
+- **Admin**: Tüm kullanıcı yetkilerine sahiptir; ek olarak kitap ekler/günceller/siler ve ödünç kayıtlarının tamamını görür.
 
 ---
 
@@ -61,7 +61,7 @@ Sade ve ortalı kart tasarımı, şifre gücü göstergesi.
 | **React Router**   | Tek sayfa uygulama (SPA) yönlendirmesi            |
 | **Tailwind CSS**   | Utility-first CSS framework + özel `brand` paleti |
 | **Axios**          | HTTP istekleri (interceptor ile JWT yönetimi)     |
-| **Context API**    | Global durum yönetimi (Auth, Borrow Limit)        |
+| **Context API**    | Global durum yönetimi (Auth)                      |
 | **React Toastify** | Bildirim sistemi                                  |
 
 ### Backend
@@ -86,8 +86,7 @@ Sade ve ortalı kart tasarımı, şifre gücü göstergesi.
 
 - Kayıt olma ve giriş yapma (form validasyonu, şifre gücü göstergesi)
 - Müsait kitapları listeleme (ödünçte olanlar gizlenir)
-- Kitap detay sayfası (müsaitlik durumu rozetli)
-- Ödünç alma (en fazla 2 aktif ödünç limiti, anlık uyarı)
+- Kart üzerinden tek tıkla ödünç alma
 - "Kitaplarım" sayfasında aktif ve geçmiş ödünç kayıtları
 - İade etme
 
@@ -125,7 +124,7 @@ web-programlama-proje/
 │   ├── controllers/
 │   │   ├── authController.js        # Kayıt, giriş, profil
 │   │   ├── bookController.js        # Kitap CRUD
-│   │   └── borrowController.js      # Ödünç alma/iade + limit
+│   │   └── borrowController.js      # Ödünç alma/iade
 │   ├── middleware/
 │   │   ├── authMiddleware.js        # protect (JWT doğrulama)
 │   │   ├── roleMiddleware.js        # adminOnly
@@ -156,10 +155,9 @@ web-programlama-proje/
     │   │   ├── LoadingSpinner.jsx
     │   │   └── ProtectedRoute.jsx
     │   ├── context/
-    │   │   └── AuthContext.jsx      # User + token + borrowLimit
+    │   │   └── AuthContext.jsx      # User + token
     │   ├── pages/
     │   │   ├── Home.jsx
-    │   │   ├── BookDetail.jsx
     │   │   ├── Login.jsx
     │   │   ├── Register.jsx
     │   │   ├── MyBooks.jsx
@@ -238,10 +236,9 @@ web-programlama-proje/
 
 | Method | Endpoint              | Erişim  | Açıklama                              |
 | ------ | --------------------- | ------- | ------------------------------------- |
-| POST   | `/borrow`             | Private | Ödünç al (max 2 limit kontrolü)       |
+| POST   | `/borrow`             | Private | Ödünç al                              |
 | PUT    | `/borrow/return/:id`  | Private | İade et                               |
 | GET    | `/borrow/my-books`    | Private | Kullanıcının kendi ödünçleri          |
-| GET    | `/borrow/limit`       | Private | Mevcut limit / kalan / canBorrow      |
 | GET    | `/borrow/all`         | Admin   | Tüm ödünç kayıtları                   |
 
 ---
@@ -252,8 +249,7 @@ web-programlama-proje/
 
 | Route             | Erişim     | Açıklama                                          |
 | ----------------- | ---------- | ------------------------------------------------- |
-| `/`               | Public     | Anasayfa (hero + müsait kitap grid'i)             |
-| `/books/:id`      | Public     | Kitap detay + ödünç alma                          |
+| `/`               | Public     | Anasayfa (hero + müsait kitap kartları + ödünç al)|
 | `/login`          | Public     | Giriş (ortalı kart tasarımı)                      |
 | `/register`       | Public     | Kayıt (şifre gücü göstergesi)                     |
 | `/my-books`       | Private    | Kullanıcının ödünç aldığı kitaplar                |
@@ -344,7 +340,6 @@ Vite'ın proxy ayarı sayesinde `/api/*` istekleri otomatik olarak backend'e yö
 - **Header**: Scroll'a duyarlı; başlangıçta transparan, kaydırınca beyaz blur + shadow alır.
 - **Hero**: Bloksuz fluid tasarım, animasyonlu badge ve gradient yazılar.
 - **Login / Register**: Sade, ortalanmış kart tasarımı.
-- **Book Detail**: Müsaitlik rozeti, ödünç limit uyarıları.
 - **Admin Panel**: Sekmeli arayüz (Kitaplar / Ödünç Kayıtları).
 - **Mobil-first**: Tüm sayfalar Tailwind responsive utility'leri ile uyarlandı.
 

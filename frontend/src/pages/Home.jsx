@@ -1,32 +1,56 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import BookCard from '../components/BookCard'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { useAuth } from '../context/AuthContext'
 
 export default function Home() {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [borrowingId, setBorrowingId] = useState(null)
+
+  const fetchBooks = useCallback(async () => {
+    try {
+      const { data } = await api.get('/books')
+      setBooks(Array.isArray(data) ? data : data?.books || [])
+    } catch (err) {
+      toast.error('Kitaplar yüklenemedi')
+    }
+  }, [])
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true)
-      try {
-        const { data } = await api.get('/books')
-        setBooks(Array.isArray(data) ? data : data?.books || [])
-      } catch (err) {
-        toast.error('Kitaplar yüklenemedi')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchBooks()
-  }, [])
+    setLoading(true)
+    fetchBooks().finally(() => setLoading(false))
+  }, [fetchBooks])
 
   const available = useMemo(
     () => books.filter((b) => (b.availableCopies ?? 0) > 0),
     [books],
   )
+
+  const handleBorrow = async (bookId) => {
+    if (!isAuthenticated) {
+      toast.info('Ödünç almak için giriş yapın')
+      navigate('/login')
+      return
+    }
+    setBorrowingId(bookId)
+    try {
+      await api.post('/borrow', { bookId })
+      toast.success('Kitap ödünç alındı')
+      await fetchBooks()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Ödünç alma başarısız')
+      await fetchBooks()
+    } finally {
+      setBorrowingId(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -78,7 +102,12 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {available.map((book) => (
-              <BookCard key={book._id} book={book} />
+              <BookCard
+                key={book._id}
+                book={book}
+                onBorrow={handleBorrow}
+                borrowing={borrowingId === book._id}
+              />
             ))}
           </div>
         )}

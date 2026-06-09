@@ -3,12 +3,6 @@ import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import api from '../api/axios'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { useAuth } from '../context/AuthContext'
-
-const TABS = [
-  { id: 'borrowed', label: 'Aktif' },
-  { id: 'returned', label: 'Geçmiş' },
-]
 
 const formatDate = (date) => {
   if (!date) return '-'
@@ -20,10 +14,8 @@ const formatDate = (date) => {
 }
 
 export default function MyBooks() {
-  const { refreshBorrowLimit } = useAuth()
   const [borrows, setBorrows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('borrowed')
   const [returningId, setReturningId] = useState(null)
 
   const fetchData = async () => {
@@ -48,7 +40,6 @@ export default function MyBooks() {
       await api.put(`/borrow/return/${borrowId}`)
       toast.success('Kitap iade edildi')
       fetchData()
-      refreshBorrowLimit()
     } catch (err) {
       toast.error(err?.response?.data?.message || 'İade başarısız')
     } finally {
@@ -56,9 +47,9 @@ export default function MyBooks() {
     }
   }
 
-  const filtered = useMemo(
-    () => borrows.filter((b) => b.status === tab),
-    [borrows, tab],
+  const active = useMemo(
+    () => borrows.filter((b) => b.status === 'borrowed'),
+    [borrows],
   )
 
   return (
@@ -66,45 +57,22 @@ export default function MyBooks() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Kitaplarım</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Ödünç aldığın ve geçmişte iade ettiğin kitaplar.
+          Şu anda ödünçte olan kitapların.
         </p>
-      </div>
-
-      <div className="border-b border-slate-200">
-        <nav className="flex gap-6">
-          {TABS.map((t) => {
-            const count = borrows.filter((b) => b.status === t.id).length
-            const active = tab === t.id
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`relative pb-3 text-sm font-medium transition ${
-                  active ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {t.label} ({count})
-                {active && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-brand-600" />}
-              </button>
-            )
-          })}
-        </nav>
       </div>
 
       {loading ? (
         <LoadingSpinner label="Yükleniyor..." />
-      ) : filtered.length === 0 ? (
+      ) : active.length === 0 ? (
         <div className="card p-12 text-center">
-          <p className="text-lg font-medium text-slate-700">
-            {tab === 'borrowed' ? 'Aktif bir ödünç kaydın yok' : 'Henüz iade ettiğin bir kitap yok'}
-          </p>
+          <p className="text-lg font-medium text-slate-700">Aktif bir ödünç kaydın yok</p>
           <Link to="/" className="btn-primary mt-4">
             Kitaplara Göz At
           </Link>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {filtered.map((borrow) => {
+          {active.map((borrow) => {
             const book = borrow.book || {}
             return (
               <div key={borrow._id} className="card flex gap-4 p-4">
@@ -117,32 +85,18 @@ export default function MyBooks() {
                   <div>
                     <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
                     <p className="mt-0.5 text-sm text-slate-600">{book.author}</p>
-                    <div className="mt-2 space-y-1 text-xs text-slate-500">
-                      <p>Ödünç: {formatDate(borrow.borrowDate)}</p>
-                      {borrow.status === 'returned' && (
-                        <p>İade: {formatDate(borrow.returnDate)}</p>
-                      )}
-                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Ödünç: {formatDate(borrow.borrowDate)}
+                    </p>
                   </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span
-                      className={`badge ${
-                        borrow.status === 'borrowed'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-emerald-100 text-emerald-700'
-                      }`}
+                  <div className="mt-3 flex items-center justify-end">
+                    <button
+                      onClick={() => handleReturn(borrow._id)}
+                      disabled={returningId === borrow._id}
+                      className="btn-primary text-xs"
                     >
-                      {borrow.status === 'borrowed' ? 'Aktif' : 'İade Edildi'}
-                    </span>
-                    {borrow.status === 'borrowed' && (
-                      <button
-                        onClick={() => handleReturn(borrow._id)}
-                        disabled={returningId === borrow._id}
-                        className="btn-primary text-xs"
-                      >
-                        {returningId === borrow._id ? 'İade ediliyor...' : 'İade Et'}
-                      </button>
-                    )}
+                      {returningId === borrow._id ? 'İade ediliyor...' : 'İade Et'}
+                    </button>
                   </div>
                 </div>
               </div>

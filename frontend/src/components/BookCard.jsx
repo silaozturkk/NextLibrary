@@ -1,9 +1,21 @@
-import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const FALLBACK_COVER =
   'https://placehold.co/300x400/e2e8f0/64748b?text=Kitap+Kapa%C4%9F%C4%B1'
 
-export default function BookCard({ book }) {
+export default function BookCard({ book, onBorrow, borrowing = false }) {
+  const { isAuthenticated } = useAuth()
+
+  const handleClick = () => {
+    if (onBorrow) onBorrow(book?._id)
+  }
+
+  const buttonLabel = borrowing
+    ? 'Ödünç alınıyor...'
+    : !isAuthenticated
+    ? 'Ödünç almak için giriş yap'
+    : 'Ödünç Al'
+
   return (
     <div className="group card-hover overflow-hidden flex flex-col">
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
@@ -19,13 +31,18 @@ export default function BookCard({ book }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
       </div>
       <div className="flex flex-1 flex-col p-4 space-y-2">
-        <h3 className="line-clamp-2 font-semibold text-slate-900 group-hover:text-brand-700 transition" title={book?.title}>
+        <h3 className="line-clamp-2 font-semibold text-slate-900 transition" title={book?.title}>
           {book?.title}
         </h3>
         <p className="text-sm text-slate-600 line-clamp-1">{book?.author}</p>
-        <Link to={`/books/${book?._id}`} className="btn-primary w-full mt-auto">
-          Detayları Gör
-        </Link>
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={borrowing}
+          className="btn-primary w-full mt-auto"
+        >
+          {buttonLabel}
+        </button>
       </div>
     </div>
   )

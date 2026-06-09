@@ -10,7 +10,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import BookDetail from './pages/BookDetail'
 import MyBooks from './pages/MyBooks'
 import AdminDashboard from './pages/AdminDashboard'
 import About from './pages/About'
@@ -36,7 +35,6 @@ export default function App() {
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/books/:id" element={<BookDetail />} />
               <Route
                 path="/my-books"
                 element={

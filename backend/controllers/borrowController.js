@@ -2,9 +2,6 @@ const asyncHandler = require('express-async-handler');
 const Borrow = require('../models/Borrow');
 const Book = require('../models/Book');
 
-// Bir kullanıcının aynı anda ödünç tutabileceği maksimum kitap sayısı
-const MAX_ACTIVE_BORROWS = 2;
-
 // @desc    Kitap ödünç al
 // @route   POST /api/borrow
 // @access  Private
@@ -25,21 +22,6 @@ const borrowBook = asyncHandler(async (req, res) => {
   if (book.availableCopies <= 0) {
     res.status(400);
     throw new Error('Bu kitap şu anda ödünçte');
-  }
-
-  // Admin'ler limitten muaf — sınırsız ödünç alabilir
-  if (req.user.role !== 'admin') {
-    const activeBorrowCount = await Borrow.countDocuments({
-      user: req.user._id,
-      status: 'borrowed',
-    });
-
-    if (activeBorrowCount >= MAX_ACTIVE_BORROWS) {
-      res.status(400);
-      throw new Error(
-        `Ödünç alma limitiniz doldu (${activeBorrowCount}/${MAX_ACTIVE_BORROWS}). Yeni kitap almak için önce bir kitap iade edin.`,
-      );
-    }
   }
 
   const existingActive = await Borrow.findOne({
@@ -120,29 +102,9 @@ const getAllBorrows = asyncHandler(async (_req, res) => {
   res.json(borrows);
 });
 
-// @desc    Kullanıcının ödünç limiti durumu
-// @route   GET /api/borrow/limit
-// @access  Private
-const getBorrowLimit = asyncHandler(async (req, res) => {
-  const isAdmin = req.user.role === 'admin';
-  const activeCount = await Borrow.countDocuments({
-    user: req.user._id,
-    status: 'borrowed',
-  });
-  res.json({
-    active: activeCount,
-    limit: MAX_ACTIVE_BORROWS,
-    remaining: isAdmin ? Infinity : Math.max(0, MAX_ACTIVE_BORROWS - activeCount),
-    canBorrow: isAdmin || activeCount < MAX_ACTIVE_BORROWS,
-    isUnlimited: isAdmin,
-  });
-});
-
 module.exports = {
   borrowBook,
   returnBook,
   getMyBorrows,
   getAllBorrows,
-  getBorrowLimit,
-  MAX_ACTIVE_BORROWS,
 };

@@ -11,9 +11,7 @@ export default function Footer() {
             </span>
             <span>© {new Date().getFullYear()} Kütüphane Yönetim Sistemi</span>
           </div>
-          <div className="flex items-center gap-6 text-sm text-slate-500">
-            <Link to="/about" className="hover:text-brand-600 transition">Hakkımızda</Link>
-          </div>
+          
         </div>
       </div>
     </footer>
