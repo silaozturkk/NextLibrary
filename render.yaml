@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: nextlibrary-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Asagidakileri Render Dashboard > Environment'tan elle giriniz:
+      # MONGO_URI    -> MongoDB Atlas connection string
+      # JWT_SECRET   -> Guclu rastgele bir secret
+      # CLIENT_URL   -> https://<vercel-app>.vercel.app
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_URL
+        sync: false

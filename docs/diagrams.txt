@@ -1,0 +1,230 @@
+==============================================================
+NextLibrary - UML / ER Diyagramları (PlantUML)
+==============================================================
+Kullanim:
+  1) https://www.plantuml.com/plantuml/uml/ adresine yapistir
+  2) Veya VSCode "PlantUML" (jebbs.plantuml) eklentisi ile preview
+  3) Her diyagram @startuml ... @enduml blogu icindedir.
+==============================================================
+
+
+--------------------------------------------------------------
+1) USE-CASE DIAGRAM
+--------------------------------------------------------------
+@startuml UseCase
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Kullanici (User)" as user
+actor "Yonetici (Admin)" as admin
+
+rectangle "Kutuphane Sistemi" {
+  usecase "Kayit Ol"                       as UC1
+  usecase "Giris Yap"                      as UC2
+  usecase "Cikis Yap"                      as UC3
+  usecase "Kitaplari Goruntule"            as UC4
+  usecase "Kitap Odunc Al"                 as UC5
+  usecase "Kitap Iade Et"                  as UC6
+  usecase "Aktif Odunclerini Goruntule"    as UC7
+  usecase "Kitap Ekle"                     as UC8
+  usecase "Kitap Guncelle"                 as UC9
+  usecase "Kitap Sil"                      as UC10
+  usecase "Tum Odunc Kayitlarini Gor"      as UC11
+}
+
+user --> UC1
+user --> UC2
+user --> UC3
+user --> UC4
+user --> UC5
+user --> UC6
+user --> UC7
+
+' Admin, User'in tum yetkilerini kalitir
+admin --|> user
+
+admin --> UC8
+admin --> UC9
+admin --> UC10
+admin --> UC11
+
+' Giris yapma on kosulu
+UC5  ..> UC2 : <<include>>
+UC6  ..> UC2 : <<include>>
+UC7  ..> UC2 : <<include>>
+UC8  ..> UC2 : <<include>>
+UC9  ..> UC2 : <<include>>
+UC10 ..> UC2 : <<include>>
+UC11 ..> UC2 : <<include>>
+
+@enduml
+
+
+--------------------------------------------------------------
+2) ACTIVITY DIAGRAM (Kitap Odunc Alma Akisi)
+--------------------------------------------------------------
+@startuml ActivityBorrow
+title Kitap Odunc Alma Akisi
+
+start
+:Kullanici anasayfayi acar;
+:GET /api/books -> musait kitaplar listelenir
+ (availableCopies > 0);
+
+if (Kullanici giris yapmis mi?) then (hayir)
+  :"Giris yap" sayfasina yonlendir;
+  stop
+else (evet)
+endif
+
+:Kullanici bir kitabin "Odunc Al" butonuna tiklar;
+:POST /api/borrow  (Authorization: Bearer <JWT>);
+
+if (JWT gecerli mi?) then (hayir)
+  :401 Yetkilendirme hatasi;
+  stop
+endif
+
+if (Kitap bulundu mu?) then (hayir)
+  :404 Kitap bulunamadi;
+  stop
+endif
+
+if (availableCopies > 0?) then (hayir)
+  :400 "Bu kitap su anda oduncte";
+  stop
+endif
+
+if (Ayni kitap kullanicida aktif odunc mu?) then (evet)
+  :400 "Bu kitap zaten oduncte";
+  stop
+endif
+
+:book.availableCopies -= 1;
+:Borrow kaydi olustur
+ (user, book, status='borrowed', borrowDate);
+:201 yanit + populate(book);
+:Frontend kitap listesini yeniler;
+:Toast: "Kitap odunc alindi";
+stop
+
+@enduml
+
+
+--------------------------------------------------------------
+3) ER DIAGRAM (Veri Modeli)
+--------------------------------------------------------------
+@startuml ERDiagram
+hide circle
+skinparam linetype ortho
+
+entity "User" as user {
+  * _id        : ObjectId  <<PK>>
+  --
+  * name       : String
+  * email      : String  <<unique>>
+  * password   : String  (bcrypt hash)
+  * role       : Enum { user, admin }
+    createdAt  : Date
+    updatedAt  : Date
+}
+
+entity "Book" as book {
+  * _id             : ObjectId  <<PK>>
+  --
+  * title           : String
+  * author          : String
+    isbn            : String
+    description     : String
+    coverImage      : String (URL)
+    totalCopies     : Number  (= 1)
+    availableCopies : Number  (0 veya 1)
+    createdAt       : Date
+    updatedAt       : Date
+}
+
+entity "Borrow" as borrow {
+  * _id         : ObjectId  <<PK>>
+  --
+  * user        : ObjectId  <<FK -> User._id>>
+  * book        : ObjectId  <<FK -> Book._id>>
+  * status      : Enum { borrowed, returned }
+    borrowDate  : Date
+    returnDate  : Date
+    createdAt   : Date
+    updatedAt   : Date
+}
+
+user  ||--o{ borrow : "1 User -> N Borrow"
+book  ||--o{ borrow : "1 Book -> N Borrow"
+
+@enduml
+
+
+--------------------------------------------------------------
+4) COMPONENT DIAGRAM
+--------------------------------------------------------------
+@startuml ComponentDiagram
+title NextLibrary - Bilesen Diyagrami
+
+actor "Tarayici\n(End User)" as browser
+
+package "Frontend  (React + Vite)" as fe {
+  component "Pages\n(Home, MyBooks,\nAdminDashboard,\nAbout, Login, Register)"  as pages
+  component "Components\n(Navbar, Footer,\nBookCard, Modal,\nProtectedRoute,\nLoadingSpinner)"          as comps
+  component "AuthContext\n(token + user,\nlocalStorage)"                                                as ctx
+  component "axios instance\n(JWT interceptor,\nbaseURL=/api)"                                          as axios
+}
+
+package "Backend  (Express + Node)" as be {
+  component "Routes\n(authRoutes,\nbookRoutes,\nborrowRoutes)"                                          as routes
+  component "Middleware\n(protect,\nadminOnly,\nerrorHandler)"                                          as mw
+  component "Controllers\n(authController,\nbookController,\nborrowController)"                         as ctrl
+  component "Models (Mongoose)\n(User, Book, Borrow)"                                                   as models
+  component "Utils\n(generateToken,\nseed)"                                                             as utils
+}
+
+database "MongoDB Atlas" as db
+
+browser --> pages       : HTTPS / HTML+JS
+pages   --> comps
+pages   --> ctx
+pages   --> axios
+comps   --> ctx
+
+axios   --> routes      : "/api/*  (JSON + Bearer JWT)"
+routes  --> mw
+mw      --> ctrl
+ctrl    --> models
+models  --> db          : Mongoose driver
+ctrl    ..> utils
+
+note right of ctx
+  Login/Register sonrasi
+  token ve user bilgisi
+  localStorage'a yazilir.
+end note
+
+note right of mw
+  protect    : JWT dogrula
+  adminOnly  : role === 'admin'
+end note
+
+@enduml
+
+
+==============================================================
+NOTLAR
+==============================================================
+- Sistem tek-kopya modeline gore tasarlanmistir:
+  totalCopies = 1; availableCopies 0 veya 1.
+- Odunc alma limiti yoktur; her kullanici diledigi kadar
+  kitap odunc alabilir (kitap musait olmak kosuluyla).
+- Kullanici "Kitaplarim" sayfasinda yalnizca aktif odunc
+  kitaplarini gorur; iade edilen kitaplarin gecmisi UI'da
+  gosterilmez (DB'de kayit kalmaya devam eder).
+- Admin, normal kullanicinin tum yetkilerine ek olarak
+  kitap CRUD ve tum odunc kayitlarini (aktif + iade edilmis)
+  goruntuleme hakkina sahiptir.
+==============================================================
