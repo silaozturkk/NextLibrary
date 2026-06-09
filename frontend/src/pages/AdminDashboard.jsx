@@ -7,18 +7,14 @@ import Modal from '../components/Modal'
 const EMPTY_BOOK = {
   title: '',
   author: '',
-  category: '',
   isbn: '',
   description: '',
   coverImage: '',
-  totalCopies: 1,
-  availableCopies: 1,
 }
 
 const TABS = [
   { id: 'books', label: 'Kitaplar' },
   { id: 'borrows', label: 'Ödünç Kayıtları' },
-  { id: 'messages', label: 'Mesajlar' },
 ]
 
 const formatDate = (date) => {
@@ -30,23 +26,10 @@ const formatDate = (date) => {
   })
 }
 
-const formatDateTime = (date) => {
-  if (!date) return '-'
-  return new Date(date).toLocaleString('tr-TR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 export default function AdminDashboard() {
   const [tab, setTab] = useState('books')
   const [books, setBooks] = useState([])
   const [borrows, setBorrows] = useState([])
-  const [messages, setMessages] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const [isOpen, setIsOpen] = useState(false)
@@ -56,13 +39,11 @@ export default function AdminDashboard() {
   const [errors, setErrors] = useState({})
 
   const stats = useMemo(() => {
-    const totalCopies = books.reduce((a, b) => a + (b.totalCopies || 0), 0)
-    const availableCopies = books.reduce((a, b) => a + (b.availableCopies || 0), 0)
     const activeBorrows = borrows.filter((b) => b.status === 'borrowed').length
+    const availableBooks = books.filter((b) => (b.availableCopies ?? 0) > 0).length
     return {
       totalBooks: books.length,
-      totalCopies,
-      availableCopies,
+      availableBooks,
       activeBorrows,
     }
   }, [books, borrows])
@@ -70,44 +51,18 @@ export default function AdminDashboard() {
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const [booksRes, borrowsRes, messagesRes] = await Promise.all([
+      const [booksRes, borrowsRes] = await Promise.all([
         api.get('/books'),
         api.get('/borrow/all').catch(() => ({ data: [] })),
-        api.get('/messages').catch(() => ({ data: { messages: [], unreadCount: 0 } })),
       ])
       setBooks(Array.isArray(booksRes.data) ? booksRes.data : booksRes.data?.books || [])
       setBorrows(
         Array.isArray(borrowsRes.data) ? borrowsRes.data : borrowsRes.data?.borrows || [],
       )
-      setMessages(messagesRes.data?.messages || [])
-      setUnreadCount(messagesRes.data?.unreadCount || 0)
     } catch (err) {
       toast.error('Veriler yüklenemedi')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleToggleRead = async (id) => {
-    try {
-      const { data } = await api.put(`/messages/${id}/read`)
-      setMessages((prev) => prev.map((m) => (m._id === id ? data : m)))
-      setUnreadCount((prev) => prev + (data.isRead ? -1 : 1))
-    } catch (err) {
-      toast.error('İşlem başarısız')
-    }
-  }
-
-  const handleDeleteMessage = async (id) => {
-    if (!window.confirm('Bu mesajı silmek istediğinizden emin misiniz?')) return
-    try {
-      await api.delete(`/messages/${id}`)
-      const target = messages.find((m) => m._id === id)
-      setMessages((prev) => prev.filter((m) => m._id !== id))
-      if (target && !target.isRead) setUnreadCount((prev) => Math.max(0, prev - 1))
-      toast.success('Mesaj silindi')
-    } catch (err) {
-      toast.error('Silme başarısız')
     }
   }
 
@@ -127,12 +82,9 @@ export default function AdminDashboard() {
     setForm({
       title: book.title || '',
       author: book.author || '',
-      category: book.category || '',
       isbn: book.isbn || '',
       description: book.description || '',
       coverImage: book.coverImage || '',
-      totalCopies: book.totalCopies ?? 0,
-      availableCopies: book.availableCopies ?? 0,
     })
     setErrors({})
     setIsOpen(true)
@@ -142,10 +94,6 @@ export default function AdminDashboard() {
     const e = {}
     if (!form.title.trim()) e.title = 'Başlık gerekli'
     if (!form.author.trim()) e.author = 'Yazar gerekli'
-    if (Number(form.totalCopies) < 0) e.totalCopies = 'Negatif olamaz'
-    if (Number(form.availableCopies) < 0) e.availableCopies = 'Negatif olamaz'
-    if (Number(form.availableCopies) > Number(form.totalCopies))
-      e.availableCopies = 'Toplamdan fazla olamaz'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -155,16 +103,11 @@ export default function AdminDashboard() {
     if (!validate()) return
     setSaving(true)
     try {
-      const payload = {
-        ...form,
-        totalCopies: Number(form.totalCopies),
-        availableCopies: Number(form.availableCopies),
-      }
       if (editingId) {
-        await api.put(`/books/${editingId}`, payload)
+        await api.put(`/books/${editingId}`, form)
         toast.success('Kitap güncellendi')
       } else {
-        await api.post('/books', payload)
+        await api.post('/books', form)
         toast.success('Kitap eklendi')
       }
       setIsOpen(false)
@@ -201,10 +144,9 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Toplam Kitap" value={stats.totalBooks} />
-        <StatCard label="Toplam Kopya" value={stats.totalCopies} />
-        <StatCard label="Müsait" value={stats.availableCopies} />
+        <StatCard label="Müsait" value={stats.availableBooks} />
         <StatCard label="Aktif Ödünç" value={stats.activeBorrows} />
       </div>
 
@@ -212,21 +154,15 @@ export default function AdminDashboard() {
         <nav className="flex gap-6">
           {TABS.map((t) => {
             const active = tab === t.id
-            const showBadge = t.id === 'messages' && unreadCount > 0
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`relative flex items-center gap-2 pb-3 text-sm font-medium transition ${
+                className={`relative pb-3 text-sm font-medium transition ${
                   active ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {t.label}
-                {showBadge && (
-                  <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-600 px-1.5 text-[10px] font-bold text-white">
-                    {unreadCount}
-                  </span>
-                )}
                 {active && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-brand-600" />}
               </button>
             )
@@ -238,14 +174,8 @@ export default function AdminDashboard() {
         <LoadingSpinner label="Yükleniyor..." />
       ) : tab === 'books' ? (
         <BooksTable books={books} onEdit={openEdit} onDelete={handleDelete} />
-      ) : tab === 'borrows' ? (
-        <BorrowsTable borrows={borrows} />
       ) : (
-        <MessagesTable
-          messages={messages}
-          onToggleRead={handleToggleRead}
-          onDelete={handleDeleteMessage}
-        />
+        <BorrowsTable borrows={borrows} />
       )}
 
       <Modal
@@ -270,14 +200,7 @@ export default function AdminDashboard() {
                 onChange={(e) => setForm({ ...form, author: e.target.value })}
               />
             </Field>
-            <Field label="Kategori">
-              <input
-                className="input"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-              />
-            </Field>
-            <Field label="ISBN">
+            <Field label="ISBN" className="sm:col-span-2">
               <input
                 className="input"
                 value={form.isbn}
@@ -290,24 +213,6 @@ export default function AdminDashboard() {
                 placeholder="https://..."
                 value={form.coverImage}
                 onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
-              />
-            </Field>
-            <Field label="Toplam Kopya" error={errors.totalCopies}>
-              <input
-                type="number"
-                min="0"
-                className="input"
-                value={form.totalCopies}
-                onChange={(e) => setForm({ ...form, totalCopies: e.target.value })}
-              />
-            </Field>
-            <Field label="Mevcut Kopya" error={errors.availableCopies}>
-              <input
-                type="number"
-                min="0"
-                className="input"
-                value={form.availableCopies}
-                onChange={(e) => setForm({ ...form, availableCopies: e.target.value })}
               />
             </Field>
             <Field label="Açıklama" className="sm:col-span-2">
@@ -370,119 +275,44 @@ function BooksTable({ books, onEdit, onDelete }) {
             <tr>
               <th className="px-4 py-3">Başlık</th>
               <th className="px-4 py-3">Yazar</th>
-              <th className="px-4 py-3">Kategori</th>
-              <th className="px-4 py-3">Stok</th>
+              <th className="px-4 py-3">Durum</th>
               <th className="px-4 py-3 text-right">İşlem</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
-            {books.map((book) => (
-              <tr key={book._id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-900">{book.title}</td>
-                <td className="px-4 py-3 text-slate-700">{book.author}</td>
-                <td className="px-4 py-3 text-slate-700">{book.category || '-'}</td>
-                <td className="px-4 py-3 text-slate-700">
-                  {book.availableCopies} / {book.totalCopies}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => onEdit(book)} className="btn-secondary text-xs">
-                      Düzenle
-                    </button>
-                    <button onClick={() => onDelete(book._id)} className="btn-danger text-xs">
-                      Sil
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {books.map((book) => {
+              const isAvailable = (book.availableCopies ?? 0) > 0
+              return (
+                <tr key={book._id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium text-slate-900">{book.title}</td>
+                  <td className="px-4 py-3 text-slate-700">{book.author}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`badge ${
+                        isAvailable
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}
+                    >
+                      {isAvailable ? 'Müsait' : 'Ödünçte'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => onEdit(book)} className="btn-secondary text-xs">
+                        Düzenle
+                      </button>
+                      <button onClick={() => onDelete(book._id)} className="btn-danger text-xs">
+                        Sil
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
-    </div>
-  )
-}
-
-function MessagesTable({ messages, onToggleRead, onDelete }) {
-  const [expandedId, setExpandedId] = useState(null)
-
-  if (messages.length === 0) {
-    return (
-      <div className="card p-12 text-center">
-        <p className="text-slate-600">Henüz bir iletişim mesajı gelmedi.</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-3">
-      {messages.map((m) => {
-        const isExpanded = expandedId === m._id
-        return (
-          <div
-            key={m._id}
-            className={`card overflow-hidden transition ${
-              !m.isRead ? 'ring-2 ring-brand-200' : ''
-            }`}
-          >
-            <button
-              type="button"
-              onClick={() => setExpandedId(isExpanded ? null : m._id)}
-              className="flex w-full items-start gap-3 p-4 text-left hover:bg-slate-50"
-            >
-              {!m.isRead && (
-                <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-brand-600" />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p
-                    className={`truncate ${
-                      !m.isRead ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
-                    }`}
-                  >
-                    {m.subject}
-                  </p>
-                  <span className="text-xs text-slate-500">{formatDateTime(m.createdAt)}</span>
-                </div>
-                <p className="mt-1 truncate text-sm text-slate-600">
-                  <span className="font-medium text-slate-700">{m.name}</span>{' '}
-                  <span className="text-slate-400">·</span>{' '}
-                  <a
-                    href={`mailto:${m.email}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-brand-600 hover:underline"
-                  >
-                    {m.email}
-                  </a>
-                </p>
-              </div>
-              <span className="ml-2 flex-shrink-0 text-slate-400">
-                {isExpanded ? '▴' : '▾'}
-              </span>
-            </button>
-
-            {isExpanded && (
-              <div className="border-t border-slate-200 bg-slate-50/50 p-4 sm:p-5">
-                <p className="whitespace-pre-wrap text-sm text-slate-800">{m.message}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <a href={`mailto:${m.email}?subject=Re: ${m.subject}`} className="btn-primary text-xs">
-                    Yanıtla
-                  </a>
-                  <button
-                    onClick={() => onToggleRead(m._id)}
-                    className="btn-secondary text-xs"
-                  >
-                    {m.isRead ? 'Okunmadı işaretle' : 'Okundu işaretle'}
-                  </button>
-                  <button onClick={() => onDelete(m._id)} className="btn-danger text-xs">
-                    Sil
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
     </div>
   )
 }

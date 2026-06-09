@@ -24,7 +24,7 @@ const borrowBook = asyncHandler(async (req, res) => {
 
   if (book.availableCopies <= 0) {
     res.status(400);
-    throw new Error('Bu kitabın stoku tükendi');
+    throw new Error('Bu kitap şu anda ödünçte');
   }
 
   // Admin'ler limitten muaf — sınırsız ödünç alabilir

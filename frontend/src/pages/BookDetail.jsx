@@ -65,25 +65,10 @@ export default function BookDetail() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!window.confirm('Bu kitabı silmek istediğinizden emin misiniz?')) return
-    try {
-      await api.delete(`/books/${id}`)
-      toast.success('Kitap silindi')
-      navigate('/')
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Silme başarısız')
-    }
-  }
-
   if (loading) return <LoadingSpinner label="Kitap yükleniyor..." />
   if (!book) return null
 
-  const total = book.totalCopies ?? 0
-  const availableCount = book.availableCopies ?? 0
-  const borrowedCount = total - availableCount
-  const available = availableCount > 0
-  const stockPercent = total > 0 ? (availableCount / total) * 100 : 0
+  const available = (book.availableCopies ?? 0) > 0
 
   return (
     <div className="card overflow-hidden">
@@ -107,53 +92,18 @@ export default function BookDetail() {
             </div>
             <span
               className={`badge whitespace-nowrap ${
-                available ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                available ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
               }`}
             >
-              {available ? 'Müsait' : 'Tükendi'}
+              {available ? 'Müsait' : 'Ödünçte'}
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-sm">
-            {book.category && (
-              <span className="badge bg-slate-100 text-slate-700">{book.category}</span>
-            )}
-            {book.isbn && (
+          {book.isbn && (
+            <div className="flex flex-wrap gap-2 text-sm">
               <span className="badge bg-slate-100 text-slate-700">ISBN: {book.isbn}</span>
-            )}
-          </div>
-
-          {/* Stok Durumu */}
-          <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium text-slate-700">Stok Durumu</span>
-              <span className="text-sm">
-                <span
-                  className={`text-lg font-bold ${
-                    available ? 'text-emerald-600' : 'text-red-600'
-                  }`}
-                >
-                  {availableCount}
-                </span>
-                <span className="text-slate-400"> / {total} mevcut</span>
-              </span>
             </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  available
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-                    : 'bg-red-500'
-                }`}
-                style={{ width: `${stockPercent}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-slate-500">
-              {borrowedCount > 0
-                ? `${borrowedCount} kopya ödünçte`
-                : 'Tüm kopyalar raftaki rafta'}
-            </p>
-          </div>
+          )}
 
           {book.description && (
             <div>
@@ -188,7 +138,7 @@ export default function BookDetail() {
               {borrowing
                 ? 'İşleniyor...'
                 : !available
-                ? 'Tükendi'
+                ? 'Şu Anda Ödünçte'
                 : isAuthenticated && !isAdmin && borrowLimit && !borrowLimit.canBorrow
                 ? 'Limit Doldu'
                 : 'Ödünç Al'}
@@ -196,11 +146,6 @@ export default function BookDetail() {
             <Link to="/" className="btn-secondary">
               Geri Dön
             </Link>
-            {isAdmin && (
-              <button onClick={handleDelete} className="btn-danger ml-auto">
-                Kitabı Sil
-              </button>
-            )}
           </div>
 
           {/* Limit Bilgisi (kalan hak) */}

@@ -67,26 +67,6 @@ export default function Navbar() {
               </>
             )}
           </NavLink>
-          <NavLink to="/contact" className={linkClass}>
-            {({ isActive }) => (
-              <>
-                İletişim
-                {isActive && (
-                  <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-brand-600" />
-                )}
-              </>
-            )}
-          </NavLink>
-          <NavLink to="/faq" className={linkClass}>
-            {({ isActive }) => (
-              <>
-                SSS
-                {isActive && (
-                  <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-brand-600" />
-                )}
-              </>
-            )}
-          </NavLink>
           {isAuthenticated && (
             <NavLink to="/my-books" className={linkClass}>
               {({ isActive }) => (
@@ -163,12 +143,6 @@ export default function Navbar() {
           </NavLink>
           <NavLink to="/about" onClick={() => setOpen(false)} className={linkClass}>
             Hakkımızda
-          </NavLink>
-          <NavLink to="/contact" onClick={() => setOpen(false)} className={linkClass}>
-            İletişim
-          </NavLink>
-          <NavLink to="/faq" onClick={() => setOpen(false)} className={linkClass}>
-            SSS
           </NavLink>
           {isAuthenticated && (
             <NavLink to="/my-books" onClick={() => setOpen(false)} className={linkClass}>

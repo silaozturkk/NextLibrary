@@ -2,7 +2,7 @@
 
 > Modern web teknolojileriyle geliştirilmiş, **MERN Stack** tabanlı tam fonksiyonlu bir kütüphane yönetim uygulaması.
 
-Kullanıcılar kitap arar, kategoriye göre filtreler, ödünç alır ve iade eder. Yöneticiler ise kitapları, ödünç kayıtlarını ve kullanıcıdan gelen iletişim mesajlarını tek bir panelden yönetir.
+Kullanıcılar kitapları görüntüler, ödünç alır ve iade eder. Yöneticiler ise kitapları ve ödünç kayıtlarını tek bir panelden yönetir.
 
 ---
 
@@ -13,8 +13,8 @@ Bu proje, bir kütüphanenin kitap envanteri ile ödünç alma süreçlerini dij
 
 İki ana kullanıcı rolü vardır:
 
-- **User (Üye)**: Kitapları görüntüler, arar, filtreler, ödünç alır ve iade eder. Aynı anda en fazla **2 aktif** ödünç hakkı vardır.
-- **Admin**: Tüm kullanıcı yetkilerine sahiptir; ek olarak kitap ekler/günceller/siler, ödünç kayıtlarının tamamını görür ve iletişim formundan gelen mesajları yönetir. Admin için ödünç limiti yoktur.
+- **User (Üye)**: Kitapları görüntüler, ödünç alır ve iade eder. Aynı anda en fazla **2 aktif** ödünç hakkı vardır.
+- **Admin**: Tüm kullanıcı yetkilerine sahiptir; ek olarak kitap ekler/günceller/siler ve ödünç kayıtlarının tamamını görür. Admin için ödünç limiti yoktur.
 
 ---
 
@@ -24,7 +24,7 @@ Bu proje, bir kütüphanenin kitap envanteri ile ödünç alma süreçlerini dij
 
 ### Anasayfa
 
-Hero bölümü, arama çubuğu, kategori chip'leri, sıralama menüsü ve kitap grid'i.
+Hero bölümü ve müsait kitapların grid görünümü.
 
 ![Anasayfa](docs/screenshots/home.jpg)
 
@@ -34,18 +34,6 @@ Misyon, istatistik kartları ve özellik vitrini.
 
 ![Hakkımızda](docs/screenshots/about.jpg)
 
-### İletişim
-
-Bilgi kartları, sosyal medya linkleri ve gerçek backend'e bağlı iletişim formu.
-
-![İletişim](docs/screenshots/contact.jpg)
-
-### Sıkça Sorulan Sorular
-
-Aranabilir akordeon arayüzü.
-
-![SSS](docs/screenshots/faq.jpg)
-
 ### Kitaplarım
 
 Kullanıcının aktif ve geçmiş ödünç kayıtları, sekmeli görünüm.
@@ -54,7 +42,7 @@ Kullanıcının aktif ve geçmiş ödünç kayıtları, sekmeli görünüm.
 
 ### Kayıt Ol
 
-Split-screen tasarım — solda branded yan panel, sağda form.
+Sade ve ortalı kart tasarımı, şifre gücü göstergesi.
 
 ![Kayıt Ol](docs/screenshots/register.jpg)
 
@@ -97,26 +85,21 @@ Split-screen tasarım — solda branded yan panel, sağda form.
 ### Kullanıcı Tarafı
 
 - Kayıt olma ve giriş yapma (form validasyonu, şifre gücü göstergesi)
-- Anasayfada kitap **arama** (başlık / yazar / ISBN)
-- **Kategori chip'leri** ile filtreleme
-- **Sıralama** (A→Z, Z→A, En Çok Mevcut)
-- Kitap detay sayfası (stok durumu kartı + ilerleme çubuğu)
+- Müsait kitapları listeleme (ödünçte olanlar gizlenir)
+- Kitap detay sayfası (müsaitlik durumu rozetli)
 - Ödünç alma (en fazla 2 aktif ödünç limiti, anlık uyarı)
 - "Kitaplarım" sayfasında aktif ve geçmiş ödünç kayıtları
 - İade etme
 
 ### Admin Paneli
 
-- Yönetici özet istatistikleri (toplam kitap, kopya, müsait, aktif ödünç)
+- Yönetici özet istatistikleri (toplam kitap, müsait, aktif ödünç)
 - Kitap **CRUD** işlemleri (modal üzerinden)
 - Tüm ödünç kayıtlarını görüntüleme (kullanıcı + kitap bilgisi ile)
-- İletişim formundan gelen **mesaj yönetimi** (okundu/okunmadı, sil, mailto: yanıtla, okunmamış sayacı badge)
 
 ### Diğer Sayfalar
 
 - **Hakkımızda**: Misyon, vizyon, istatistikler, özellikler
-- **İletişim**: Bilgi kartları + sosyal medya + gerçek API'ye bağlı form
-- **SSS**: Aranabilir akordeon arayüzü
 
 ### Güvenlik & UX
 
@@ -142,8 +125,7 @@ web-programlama-proje/
 │   ├── controllers/
 │   │   ├── authController.js        # Kayıt, giriş, profil
 │   │   ├── bookController.js        # Kitap CRUD
-│   │   ├── borrowController.js      # Ödünç alma/iade + limit
-│   │   └── messageController.js     # İletişim mesajları
+│   │   └── borrowController.js      # Ödünç alma/iade + limit
 │   ├── middleware/
 │   │   ├── authMiddleware.js        # protect (JWT doğrulama)
 │   │   ├── roleMiddleware.js        # adminOnly
@@ -151,13 +133,11 @@ web-programlama-proje/
 │   ├── models/
 │   │   ├── User.js
 │   │   ├── Book.js
-│   │   ├── Borrow.js
-│   │   └── Message.js
+│   │   └── Borrow.js
 │   ├── routes/
 │   │   ├── authRoutes.js
 │   │   ├── bookRoutes.js
-│   │   ├── borrowRoutes.js
-│   │   └── messageRoutes.js
+│   │   └── borrowRoutes.js
 │   ├── utils/
 │   │   ├── generateToken.js
 │   │   └── seed.js                  # Test verilerini yükle
@@ -172,12 +152,9 @@ web-programlama-proje/
     │   │   ├── Navbar.jsx           # Scroll-trigger transparan header
     │   │   ├── Footer.jsx
     │   │   ├── BookCard.jsx
-    │   │   ├── SearchBar.jsx        # Arama + chip + sıralama
     │   │   ├── Modal.jsx
     │   │   ├── LoadingSpinner.jsx
-    │   │   ├── ProtectedRoute.jsx
-    │   │   ├── AuthSidePanel.jsx    # Giriş/Kayıt yan paneli
-    │   │   └── Accordion.jsx
+    │   │   └── ProtectedRoute.jsx
     │   ├── context/
     │   │   └── AuthContext.jsx      # User + token + borrowLimit
     │   ├── pages/
@@ -187,9 +164,7 @@ web-programlama-proje/
     │   │   ├── Register.jsx
     │   │   ├── MyBooks.jsx
     │   │   ├── AdminDashboard.jsx
-    │   │   ├── About.jsx
-    │   │   ├── Contact.jsx
-    │   │   └── Faq.jsx
+    │   │   └── About.jsx
     │   ├── App.jsx
     │   └── index.css                # Tailwind + custom layer
     ├── tailwind.config.js           # brand (kırmızı) paleti
@@ -214,16 +189,14 @@ web-programlama-proje/
 
 ### Book
 
-| Alan              | Tip    | Notlar                                |
-| ----------------- | ------ | ------------------------------------- |
-| `title`           | String | Zorunlu                               |
-| `author`          | String | Zorunlu                               |
-| `category`        | String | İndekslenmiş                          |
-| `isbn`            | String | Benzersiz                             |
-| `description`     | String | Açıklama metni                        |
-| `coverImage`      | String | URL                                   |
-| `totalCopies`     | Number | Toplam kopya sayısı                   |
-| `availableCopies` | Number | Mevcut kopya sayısı (ödünçle azalır)  |
+| Alan              | Tip    | Notlar                                            |
+| ----------------- | ------ | ------------------------------------------------- |
+| `title`           | String | Zorunlu                                           |
+| `author`          | String | Zorunlu                                           |
+| `isbn`            | String | Benzersiz                                         |
+| `description`     | String | Açıklama metni                                    |
+| `coverImage`      | String | URL                                               |
+| `availableCopies` | Number | 1 = müsait, 0 = ödünçte (her kitaptan tek kopya)  |
 
 ### Borrow
 
@@ -234,16 +207,6 @@ web-programlama-proje/
 | `borrowDate` | Date     | Otomatik (`Date.now`)                   |
 | `returnDate` | Date     | İade edildiğinde set edilir             |
 | `status`     | String   | `borrowed` \| `returned`                |
-
-### Message
-
-| Alan      | Tip     | Notlar                                 |
-| --------- | ------- | -------------------------------------- |
-| `name`    | String  | Zorunlu                                |
-| `email`   | String  | Zorunlu, regex doğrulamalı             |
-| `subject` | String  | Zorunlu                                |
-| `message` | String  | Zorunlu, min 10 / max 2000 karakter    |
-| `isRead`  | Boolean | Varsayılan: `false`                    |
 
 ---
 
@@ -265,7 +228,7 @@ web-programlama-proje/
 
 | Method | Endpoint     | Erişim | Açıklama                         |
 | ------ | ------------ | ------ | -------------------------------- |
-| GET    | `/books`     | Public | Tüm kitaplar (arama destekli)    |
+| GET    | `/books`     | Public | Tüm kitaplar                     |
 | GET    | `/books/:id` | Public | Tek kitap detayı                 |
 | POST   | `/books`     | Admin  | Yeni kitap ekle                  |
 | PUT    | `/books/:id` | Admin  | Kitabı güncelle                  |
@@ -281,15 +244,6 @@ web-programlama-proje/
 | GET    | `/borrow/limit`       | Private | Mevcut limit / kalan / canBorrow      |
 | GET    | `/borrow/all`         | Admin   | Tüm ödünç kayıtları                   |
 
-### Messages
-
-| Method | Endpoint               | Erişim | Açıklama                          |
-| ------ | ---------------------- | ------ | --------------------------------- |
-| POST   | `/messages`            | Public | İletişim formundan mesaj gönder   |
-| GET    | `/messages`            | Admin  | Tüm mesajlar + okunmamış sayısı   |
-| PUT    | `/messages/:id/read`   | Admin  | Okundu / okunmadı toggle          |
-| DELETE | `/messages/:id`        | Admin  | Mesajı sil                        |
-
 ---
 
 <a id="sayfalar"></a>
@@ -298,15 +252,13 @@ web-programlama-proje/
 
 | Route             | Erişim     | Açıklama                                          |
 | ----------------- | ---------- | ------------------------------------------------- |
-| `/`               | Public     | Anasayfa (hero + arama + filtre + grid)           |
+| `/`               | Public     | Anasayfa (hero + müsait kitap grid'i)             |
 | `/books/:id`      | Public     | Kitap detay + ödünç alma                          |
-| `/login`          | Public     | Giriş (split-screen tasarım)                      |
+| `/login`          | Public     | Giriş (ortalı kart tasarımı)                      |
 | `/register`       | Public     | Kayıt (şifre gücü göstergesi)                     |
 | `/my-books`       | Private    | Kullanıcının ödünç aldığı kitaplar                |
-| `/admin`          | Admin Only | Yönetim paneli (Kitap / Ödünç / Mesaj sekmeleri)  |
+| `/admin`          | Admin Only | Yönetim paneli (Kitap / Ödünç sekmeleri)          |
 | `/about`          | Public     | Hakkımızda                                        |
-| `/contact`        | Public     | İletişim formu + bilgi kartları                   |
-| `/faq`            | Public     | Sıkça Sorulan Sorular (akordeon)                  |
 
 ---
 
@@ -344,7 +296,7 @@ JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 ```
 
-Test verilerini yükle (kullanıcılar + 39 kitap):
+Test verilerini yükle (kullanıcılar + 12 kitap):
 
 ```bash
 npm run seed
@@ -391,9 +343,9 @@ Vite'ın proxy ayarı sayesinde `/api/*` istekleri otomatik olarak backend'e yö
 - **Arka plan**: `body` için yumuşak bir radial gradient (kırmızı → beyaz).
 - **Header**: Scroll'a duyarlı; başlangıçta transparan, kaydırınca beyaz blur + shadow alır.
 - **Hero**: Bloksuz fluid tasarım, animasyonlu badge ve gradient yazılar.
-- **Login / Register**: Split-screen — solda branded `AuthSidePanel`, sağda form.
-- **Book Detail**: "Stok Durumu" kartı + ilerleme çubuğu, ödünç limit uyarıları.
-- **Admin Panel**: Sekmeli arayüz, okunmamış mesajlar için kırmızı sayı badge.
+- **Login / Register**: Sade, ortalanmış kart tasarımı.
+- **Book Detail**: Müsaitlik rozeti, ödünç limit uyarıları.
+- **Admin Panel**: Sekmeli arayüz (Kitaplar / Ödünç Kayıtları).
 - **Mobil-first**: Tüm sayfalar Tailwind responsive utility'leri ile uyarlandı.
 
 ---

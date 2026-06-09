@@ -14,8 +14,6 @@ import BookDetail from './pages/BookDetail'
 import MyBooks from './pages/MyBooks'
 import AdminDashboard from './pages/AdminDashboard'
 import About from './pages/About'
-import Contact from './pages/Contact'
-import Faq from './pages/Faq'
 
 function NotFound() {
   return (
@@ -36,8 +34,6 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/faq" element={<Faq />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/books/:id" element={<BookDetail />} />

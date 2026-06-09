@@ -12,11 +12,6 @@ const bookSchema = new mongoose.Schema(
       required: [true, 'Yazar gerekli'],
       trim: true,
     },
-    category: {
-      type: String,
-      trim: true,
-      default: '',
-    },
     isbn: {
       type: String,
       trim: true,
@@ -46,6 +41,6 @@ const bookSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-bookSchema.index({ title: 'text', author: 'text', category: 'text' });
+bookSchema.index({ title: 'text', author: 'text' });
 
 module.exports = mongoose.model('Book', bookSchema);
